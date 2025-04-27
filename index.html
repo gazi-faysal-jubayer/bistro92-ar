@@ -76,93 +76,6 @@
       background: #2E7D32;
       box-shadow: 0 0 5px rgba(255,255,255,0.5);
     }
-    .interaction-buttons {
-      display: flex;
-      justify-content: center;
-      margin-top: 10px;
-    }
-    .interaction-button {
-      padding: 8px 12px;
-      background: #2196F3;
-      color: white;
-      border: none;
-      border-radius: 5px;
-      cursor: pointer;
-      margin: 0 5px;
-      font-size: 0.8em;
-    }
-    .nutrition-panel {
-      margin-top: 10px;
-      padding: 5px;
-      border: 1px solid #555;
-      border-radius: 5px;
-      font-size: 0.8em;
-      display: none;
-    }
-    .rating {
-      display: flex;
-      justify-content: center;
-      margin-top: 8px;
-    }
-    .star {
-      color: #aaa;
-      cursor: pointer;
-      font-size: 1.2em;
-      margin: 0 2px;
-    }
-    .star.active {
-      color: #FFC107;
-    }
-    .pulse-animation {
-      animation: pulse 2s infinite;
-    }
-    @keyframes pulse {
-      0% { transform: scale(1); }
-      50% { transform: scale(1.05); }
-      100% { transform: scale(1); }
-    }
-    #camera-toggle {
-      position: absolute;
-      bottom: 20px;
-      right: 20px;
-      background: rgba(0, 0, 0, 0.7);
-      color: white;
-      border: none;
-      border-radius: 5px;
-      padding: 10px;
-      cursor: pointer;
-      z-index: 100;
-    }
-    .keyboard-controls {
-      position: absolute;
-      bottom: 20px;
-      left: 20px;
-      background: rgba(0, 0, 0, 0.7);
-      color: #aaa;
-      padding: 10px;
-      border-radius: 5px;
-      font-size: 0.8em;
-      z-index: 100;
-    }
-    .download-link {
-      color: yellow;
-      display: block;
-      margin-top: 10px;
-      text-decoration: underline;
-    }
-    @media (min-width: 768px) {
-      #menu {
-        max-width: 350px;
-      }
-      .keyboard-controls {
-        display: block;
-      }
-    }
-    @media (max-width: 767px) {
-      .keyboard-controls {
-        display: none;
-      }
-    }
   </style>
 </head>
 <body>
@@ -180,30 +93,6 @@
       <button id="burger-btn" class="model-button active" onclick="changeModel('burger')">Burger</button>
       <button id="pizza-btn" class="model-button" onclick="changeModel('pizza')">Pizza</button>
     </div>
-    <div class="interaction-buttons">
-      <button onclick="rotateModel()" class="interaction-button">Rotate</button>
-      <button onclick="toggleNutrition()" class="interaction-button">Nutrition</button>
-    </div>
-    <div id="nutrition-info" class="nutrition-panel">
-      <!-- Nutrition information will be inserted here -->
-    </div>
-    <div class="rating">
-      <span class="star" onclick="rateItem(1)">★</span>
-      <span class="star" onclick="rateItem(2)">★</span>
-      <span class="star" onclick="rateItem(3)">★</span>
-      <span class="star" onclick="rateItem(4)">★</span>
-      <span class="star" onclick="rateItem(5)">★</span>
-    </div>
-    <a href="markers/pattern-gazi2.png" download class="download-link">Download Marker Image</a>
-  </div>
-  
-  <!-- Camera toggle button for PC users -->
-  <button id="camera-toggle" onclick="toggleCamera()">Switch Camera</button>
-  
-  <!-- Keyboard controls help -->
-  <div class="keyboard-controls">
-    <p>Keyboard Controls:</p>
-    <p>B = Burger | P = Pizza | R = Rotate | N = Nutrition</p>
   </div>
   
   <!-- Error message for camera issues -->
@@ -213,24 +102,23 @@
   <a-scene 
     vr-mode-ui="enabled: false" 
     embedded
-    arjs="sourceType: webcam; debugUIEnabled: false; detectionMode: mono_and_matrix; matrixCodeType: 3x3; sourceWidth: 1280; sourceHeight: 960; displayWidth: 1280; displayHeight: 960;">
+    loading-screen="enabled: false"
+    arjs="sourceType: webcam; debugUIEnabled: false; detectionMode: mono_and_matrix; matrixCodeType: 3x3; sourceWidth: 1280; sourceHeight: 960; displayWidth: 1280; displayHeight: 960; facingMode: environment;">
     
-    <!-- Define the marker handler component -->
+    <!-- Define the marker handler component first -->
     <script>
       AFRAME.registerComponent('marker-handler', {
         init: function () {
           const marker = this.el;
-          const menuDiv = document.getElementById('menu');
           const loadingDiv = document.getElementById('loading');
           
           marker.addEventListener('markerFound', function() {
             console.log('Marker Found!');
+            // Update food detected message
+            updateFoodDetected();
+            
+            // Hide loading when marker is found
             loadingDiv.style.display = 'none';
-            // Add pulse animation to the menu for better visibility
-            menuDiv.classList.add('pulse-animation');
-            setTimeout(() => {
-              menuDiv.classList.remove('pulse-animation');
-            }, 2000);
           });
           
           marker.addEventListener('markerLost', function() {
@@ -238,61 +126,36 @@
           });
         }
       });
-      
-      // Custom component for model interaction
-      AFRAME.registerComponent('model-interaction', {
-        init: function() {
-          const el = this.el;
-          
-          // Make model interactive
-          el.addEventListener('click', function() {
-            // Toggle model animation
-            if (el.getAttribute('animation__rotate')) {
-              el.removeAttribute('animation__rotate');
-            } else {
-              el.setAttribute('animation__rotate', {
-                property: 'rotation',
-                to: '0 360 0',
-                dur: 2000,
-                easing: 'linear'
-              });
-            }
-          });
-        }
-      });
     </script>
     
-    <!-- Marker for Food Models -->
-    <a-marker type="pattern" url="markers/pattern-gazi2.patt" marker-handler>
-      <!-- 3D Burger model -->
-      <a-entity 
-        id="burger-model"
-        position="0 0.5 0" 
-        scale="0.05 0.05 0.05" 
-        rotation="0 0 0"
-        model-interaction>
-        <a-gltf-model 
-          src="tasty_burger_with_fries/scene.gltf"
-          scale="1 1 1"
-          animation="property: position; to: 0 0.1 0; dur: 1000; dir: alternate; loop: true; easing: easeInOutQuad">
-        </a-gltf-model>
-        <a-text value="Burger" position="0 1.2 0" align="center" color="white" scale="5 5 5"></a-text>
-      </a-entity>
-      
-      <!-- 3D Pizza model - initially hidden -->
-      <a-entity 
-        id="pizza-model"
-        position="0 0.5 0" 
-        scale="0.05 0.05 0.05" 
-        rotation="0 0 0"
-        visible="false"
-        model-interaction>
-        <a-gltf-model 
-          src="pizza/scene.gltf"
-          scale="1 1 1"
-          animation="property: rotation; from: 0 0 0; to: 0 360 0; dur: 10000; easing: linear; loop: true">
-        </a-gltf-model>
-        <a-text value="Pizza" position="0 1.2 0" align="center" color="white" scale="5 5 5"></a-text>
+    <!-- Marker for Food -->
+    <a-marker type="pattern" url="markers/burger-marker.patt" marker-handler>
+      <!-- 3D Models Container -->
+      <a-entity id="model-container" position="0 0.5 0" rotation="0 0 0">
+        <!-- Burger model -->
+        <a-entity 
+          id="burger-model"
+          scale="0.005 0.005 0.005">
+          <a-gltf-model 
+            src="tasty_burger_with_fries/scene.gltf"
+            scale="1 1 1"
+            rotation="0 0 0">
+          </a-gltf-model>
+          <a-text value="Burger" position="0 1 0" align="center" color="white" scale="5 5 5"></a-text>
+        </a-entity>
+        
+        <!-- Pizza model -->
+        <a-entity 
+          id="pizza-model"
+          scale="0.005 0.005 0.005"
+          visible="false">
+          <a-gltf-model 
+            src="pizza/scene.gltf"
+            scale="1 1 1"
+            rotation="0 0 0">
+          </a-gltf-model>
+          <a-text value="Pizza" position="0 1 0" align="center" color="white" scale="5 5 5"></a-text>
+        </a-entity>
       </a-entity>
     </a-marker>
 
@@ -301,170 +164,57 @@
   </a-scene>
 
   <script>
-    // Current model tracker
-    let currentModel = "burger";
-    let currentCamera = "environment"; // or "user" for front camera
-    
-    // Model switching functionality
-    function changeModel(modelType) {
-      // Update UI buttons
-      document.getElementById('burger-btn').classList.remove('active');
-      document.getElementById('pizza-btn').classList.remove('active');
-      document.getElementById(modelType + '-btn').classList.add('active');
-      
-      // Reset stars
-      resetStars();
-      
-      // Hide nutrition panel
-      document.getElementById('nutrition-info').style.display = 'none';
-      
-      // Update food info
-      const foodInfoDiv = document.getElementById('food-info');
-      if (modelType === 'burger') {
-        foodInfoDiv.innerHTML = '<p><strong>Burger</strong>: Juicy beef patty with lettuce and tomato.</p>';
-        document.getElementById('burger-model').setAttribute('visible', true);
-        document.getElementById('pizza-model').setAttribute('visible', false);
-        currentModel = 'burger';
-      } else if (modelType === 'pizza') {
-        foodInfoDiv.innerHTML = '<p><strong>Pizza</strong>: Delicious pizza with cheese and toppings.</p>';
-        document.getElementById('burger-model').setAttribute('visible', false);
-        document.getElementById('pizza-model').setAttribute('visible', true);
-        currentModel = 'pizza';
-      }
-    }
-    
-    // Toggle between front and back cameras
-    function toggleCamera() {
-      currentCamera = currentCamera === 'environment' ? 'user' : 'environment';
-      document.getElementById('camera-toggle').textContent = 
-        currentCamera === 'environment' ? 'Switch to Front Camera' : 'Switch to Back Camera';
-      
-      // Restart the AR experience with new camera
-      restartARExperience();
-    }
-    
-    // Restart AR experience with new camera settings
-    function restartARExperience() {
-      const loadingDiv = document.getElementById('loading');
-      loadingDiv.style.display = 'block';
-      loadingDiv.textContent = 'Switching cameras...';
-      
-      // Get the AR.js scene and update camera
-      const arSystem = document.querySelector('a-scene').systems.arjs;
-      if (arSystem) {
-        arSystem._teardownVideo();
-        arSystem.arToolkitSource.options.facingMode = currentCamera;
-        arSystem.arToolkitSource.initialize().then(() => {
-          console.log(`Switched to ${currentCamera} camera`);
-          setTimeout(() => {
-            loadingDiv.style.display = 'none';
-          }, 1000);
-        });
-      }
-    }
-    
-    // Rotate the current model 360 degrees
-    function rotateModel() {
-      const model = document.getElementById(currentModel + '-model');
-      model.setAttribute('animation__user', {
-        property: 'rotation',
-        to: '0 360 0',
-        dur: 2000,
-        easing: 'easeOutQuad'
-      });
-    }
-    
-    // Toggle nutrition information
-    function toggleNutrition() {
-      const nutritionPanel = document.getElementById('nutrition-info');
-      
-      if (nutritionPanel.style.display === 'block') {
-        nutritionPanel.style.display = 'none';
-        return;
-      }
-      
-      if (currentModel === 'burger') {
-        nutritionPanel.innerHTML = `
-          <p><strong>Nutrition Facts (per serving):</strong></p>
-          <p>Calories: 650 | Protein: 35g | Fat: 38g | Carbs: 45g</p>
-          <p>Ingredients: Beef patty, lettuce, tomato, cheese, bun</p>
-        `;
-      } else {
-        nutritionPanel.innerHTML = `
-          <p><strong>Nutrition Facts (per slice):</strong></p>
-          <p>Calories: 285 | Protein: 12g | Fat: 10g | Carbs: 36g</p>
-          <p>Ingredients: Flour, tomato sauce, cheese, herbs</p>
-        `;
-      }
-      nutritionPanel.style.display = 'block';
-    }
-    
-    // Rate the current food item
-    function rateItem(rating) {
-      const stars = document.querySelectorAll('.star');
-      
-      // Reset all stars
-      stars.forEach((star, index) => {
-        if (index < rating) {
-          star.classList.add('active');
-        } else {
-          star.classList.remove('active');
-        }
-      });
-      
-      // Show feedback
-      const foodInfoDiv = document.getElementById('food-info');
-      const currentInfo = foodInfoDiv.innerHTML;
-      foodInfoDiv.innerHTML = `${currentInfo}<p><small>Thanks for your ${rating}-star rating!</small></p>`;
-      
-      // Reset feedback after 3 seconds
-      setTimeout(() => {
-        foodInfoDiv.innerHTML = currentInfo;
-      }, 3000);
-    }
-    
-    // Reset star ratings
-    function resetStars() {
-      const stars = document.querySelectorAll('.star');
-      stars.forEach(star => star.classList.remove('active'));
-    }
-    
-    // Add keyboard controls for desktop users
-    document.addEventListener('keydown', function(event) {
-      switch(event.key.toLowerCase()) {
-        case 'b':
-          changeModel('burger');
-          break;
-        case 'p':
-          changeModel('pizza');
-          break;
-        case 'r':
-          rotateModel();
-          break;
-        case 'n':
-          toggleNutrition();
-          break;
-      }
-    });
-  
     // Debug camera, model, and marker detection
     console.log('AR.js initializing...');
     const scene = document.querySelector('a-scene');
     const errorDiv = document.getElementById('error');
     const loadingDiv = document.getElementById('loading');
-    const cameraToggleBtn = document.getElementById('camera-toggle');
-
-    // Set initial camera toggle text
-    cameraToggleBtn.textContent = currentCamera === 'environment' ? 'Switch to Front Camera' : 'Switch to Back Camera';
+    const foodInfo = document.getElementById('food-info');
     
-    // Check if we're on desktop or mobile
-    const isMobile = /Android|webOS|iPhone|iPad|iPod|BlackBerry|IEMobile|Opera Mini/i.test(navigator.userAgent);
-    if (!isMobile) {
-      // We're on desktop, show appropriate UI
-      document.querySelector('.keyboard-controls').style.display = 'block';
-      // Set default to user-facing camera for desktop
-      currentCamera = 'user';
-      cameraToggleBtn.textContent = 'Switch to Back Camera';
+    // Current model state
+    let currentModel = 'burger';
+    
+    // Food information
+    const foodData = {
+      burger: {
+        name: 'Burger',
+        description: 'Juicy beef patty with lettuce and tomato.'
+      },
+      pizza: {
+        name: 'Pizza',
+        description: 'Delicious cheese pizza with a crispy crust.'
+      }
+    };
+    
+    // Function to change the current model
+    function changeModel(modelType) {
+      // Update current model
+      currentModel = modelType;
+      
+      // Update visibility of models
+      document.getElementById('burger-model').setAttribute('visible', modelType === 'burger');
+      document.getElementById('pizza-model').setAttribute('visible', modelType === 'pizza');
+      
+      // Update active button styling
+      document.getElementById('burger-btn').classList.toggle('active', modelType === 'burger');
+      document.getElementById('pizza-btn').classList.toggle('active', modelType === 'pizza');
+      
+      // Update food info
+      updateFoodInfo();
+      
+      console.log(`Changed to ${modelType} model`);
+    }
+    
+    // Update food info based on current model
+    function updateFoodInfo() {
+      const food = foodData[currentModel];
+      foodInfo.innerHTML = `<p><strong>${food.name}</strong>: ${food.description}</p>`;
+    }
+    
+    // Update food detected message
+    function updateFoodDetected() {
+      const food = foodData[currentModel];
+      foodInfo.innerHTML = `<p><strong>${food.name}</strong>: ${food.description}</p><p>✅ ${food.name} detected!</p>`;
     }
 
     // Handle device orientation permission on iOS 13+
@@ -484,27 +234,17 @@
     document.body.addEventListener('click', handleOrientation, {once: true});
     document.body.addEventListener('touchstart', handleOrientation, {once: true});
 
-    // Check if camera is accessible - don't specify facingMode initially to maximize compatibility
+    // Check if camera is accessible
     navigator.mediaDevices.getUserMedia({ 
-      video: true
+      video: { 
+        facingMode: 'environment',
+        width: { ideal: 1280 },
+        height: { ideal: 960 }
+      } 
     })
       .then(stream => {
         console.log('Camera access granted');
         stream.getTracks().forEach(track => track.stop()); // Stop stream after check
-        
-        // Now try to list all available video devices to support camera switching
-        if (navigator.mediaDevices.enumerateDevices) {
-          navigator.mediaDevices.enumerateDevices()
-            .then(devices => {
-              const videoCameras = devices.filter(device => device.kind === 'videoinput');
-              console.log(`Found ${videoCameras.length} cameras`);
-              // If only one camera is available, hide the switch button
-              if (videoCameras.length <= 1) {
-                cameraToggleBtn.style.display = 'none';
-              }
-            })
-            .catch(err => console.error('Error enumerating devices:', err));
-        }
       })
       .catch(err => {
         console.error('Camera access failed:', err);
@@ -512,13 +252,14 @@
         loadingDiv.style.display = 'none';
       });
 
-    // Check if gltf models load
+    // Check if models load
     document.querySelectorAll('a-gltf-model').forEach(model => {
       model.addEventListener('model-loaded', () => {
-        console.log('Model loaded successfully:', model.getAttribute('src'));
+        console.log(`Model ${model.getAttribute('src')} loaded successfully`);
       });
+      
       model.addEventListener('model-error', (event) => {
-        console.error('Failed to load model:', model.getAttribute('src'), event.detail);
+        console.error(`Failed to load model ${model.getAttribute('src')}:`, event.detail);
         errorDiv.innerHTML = 'Failed to load 3D model. Check your internet connection.';
         errorDiv.style.display = 'block';
         loadingDiv.style.display = 'none';
@@ -539,5 +280,4 @@
     });
   </script>
 </body>
-
 </html>
